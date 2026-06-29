@@ -1,0 +1,85 @@
+version: '3.8'
+
+services:
+  redmine:
+    build:
+      context: .
+      dockerfile: docker/redmine/Dockerfile
+    image: glimfo-redmine:latest
+    container_name: glimfo_redmine
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - REDMINE_DB_POSTGRES=postgres
+      - REDMINE_DB_USERNAME=${POSTGRES_USER}
+      - REDMINE_DB_PASSWORD=${POSTGRES_PASSWORD}
+      - REDMINE_DB_DATABASE=${POSTGRES_DB}
+      - REDMINE_SECRET_KEY_BASE=${SECRET_KEY_BASE}
+      - REDMINE_PLUGINS_MIGRATE=true
+    ports:
+      - "127.0.0.1:3000:3000"
+    volumes:
+      - redmine_data:/usr/src/redmine/files
+      - ./plugins/redmine_glimfo:/usr/src/redmine/plugins/redmine_glimfo
+      - ./public/themes/glimfo:/usr/src/redmine/public/themes/glimfo
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: glimfo_postgres
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-redmine}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=${POSTGRES_DB:-redmine}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-redmine}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: glimfo_redis
+    restart: always
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:alpine
+    container_name: glimfo_nginx
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/conf.d:/etc/nginx/conf.d:ro
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    depends_on:
+      - redmine
+
+  certbot:
+    image: certbot/certbot
+    container_name: glimfo_certbot
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
+
+volumes:
+  redmine_data:
+  postgres_data:
+  redis_data:
+  certbot_conf:
+  certbot_www:
