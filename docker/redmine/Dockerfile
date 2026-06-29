@@ -5,9 +5,8 @@ FROM redmine:5.1-alpine
 RUN apk add --no-cache build-base git postgresql-dev tzdata nodejs npm && \
     echo "gem 'omniauth-google-oauth2'" >> Gemfile.local && \
     echo "gem 'omniauth-github'" >> Gemfile.local && \
-    echo "gem 'redmine_omniauth_google'" >> Gemfile.local && \
-    echo "gem 'redmine_omniauth_github'" >> Gemfile.local && \
-    bundle install --without development test && \
+    bundle config set --local without 'development test' && \
+    bundle install && \
     mkdir -p /usr/src/redmine/public/themes/glimfo
 
 # Copy initialization script
