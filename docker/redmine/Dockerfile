@@ -11,7 +11,9 @@ RUN apk add --no-cache build-base git postgresql-dev tzdata nodejs npm && \
 
 # Copy initialization script
 COPY docker/redmine/entrypoint.sh /docker-entrypoint-custom.sh
-RUN chmod +x /docker-entrypoint-custom.sh
+RUN sed -i 's/\r$//' /docker-entrypoint-custom.sh && \
+    chmod +x /docker-entrypoint-custom.sh
 
 ENTRYPOINT ["/docker-entrypoint-custom.sh"]
-CMD ["sh", "-c", "rails server -b 0.0.0.0 -p ${PORT}"]
+CMD ["rails", "server"]
+
