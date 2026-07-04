@@ -1,0 +1,44 @@
+# Render.com Infrastructure-as-Code Blueprint
+# Deploy with: https://render.com/deploy?repo=https://github.com/Glimfo/glimfo-projects
+
+services:
+  - type: web
+    name: glimfo-projects
+    runtime: docker
+    dockerfilePath: ./docker/redmine/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /login
+    envVars:
+      - key: REDMINE_DB_POSTGRES
+        fromDatabase:
+          name: glimfo-db
+          property: host
+      - key: REDMINE_DB_PORT
+        fromDatabase:
+          name: glimfo-db
+          property: port
+      - key: REDMINE_DB_USERNAME
+        fromDatabase:
+          name: glimfo-db
+          property: user
+      - key: REDMINE_DB_PASSWORD
+        fromDatabase:
+          name: glimfo-db
+          property: password
+      - key: REDMINE_DB_DATABASE
+        fromDatabase:
+          name: glimfo-db
+          property: database
+      - key: SECRET_KEY_BASE
+        generateValue: true
+      - key: RAILS_ENV
+        value: production
+      - key: RAILS_LOG_TO_STDOUT
+        value: "true"
+
+databases:
+  - name: glimfo-db
+    plan: free
+    databaseName: glimfo_projects
+    user: glimfo

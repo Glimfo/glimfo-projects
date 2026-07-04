@@ -14,4 +14,4 @@ COPY docker/redmine/entrypoint.sh /docker-entrypoint-custom.sh
 RUN chmod +x /docker-entrypoint-custom.sh
 
 ENTRYPOINT ["/docker-entrypoint-custom.sh"]
-CMD ["rails", "server", "-b", "0.0.0.0"]
+CMD ["sh", "-c", "rails server -b 0.0.0.0 -p ${PORT}"]
