@@ -1,4 +1,4 @@
-FROM redmine:5.1-alpine
+FROM redmine:6.1-alpine
 
 # Install build dependencies for native extensions
 # hadolint ignore=DL3018
